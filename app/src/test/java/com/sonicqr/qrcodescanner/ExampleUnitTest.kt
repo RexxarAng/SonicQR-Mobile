@@ -1,5 +1,7 @@
 package com.sonicqr.qrcodescanner
 
+import androidx.core.content.ContentProviderCompat.requireContext
+import com.sonicqr.qrcodescanner.util.PayloadDecoder
 import org.junit.Test
 
 import org.junit.Assert.*
