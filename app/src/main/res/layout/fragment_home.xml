@@ -45,9 +45,24 @@
                     android:id="@+id/txtScanned"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="please scan first" />
+                    android:text="Please scan the header frame" />
             </LinearLayout>
         </ScrollView>
     </com.journeyapps.barcodescanner.CompoundBarcodeView>
 
+    <ScrollView
+        android:id="@+id/scrollView2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="300dp"
+        android:layout_marginBottom="60dp"
+        android:background="@color/cardview_dark_background">
+        <TextView
+            android:id="@+id/txtOuput"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorPrimary"
+            android:textSize="10dp"
+            android:text="Please scan the header frame"/>
+    </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

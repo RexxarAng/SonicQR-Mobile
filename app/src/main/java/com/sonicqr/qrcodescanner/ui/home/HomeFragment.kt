@@ -1,23 +1,17 @@
 package com.sonicqr.qrcodescanner.ui.home
 
 import android.content.ContentValues
-import android.content.Context
-import android.content.Intent
 import android.media.AudioManager
 import android.media.ToneGenerator
-import android.net.Uri
 import android.os.Bundle
 import android.util.SparseArray
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import android.widget.Toast
-import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import androidx.multidex.BuildConfig
 import com.google.zxing.ResultPoint
 import com.journeyapps.barcodescanner.BarcodeCallback
 import com.journeyapps.barcodescanner.BarcodeResult
@@ -27,12 +21,14 @@ import com.sonicqr.qrcodescanner.databinding.FragmentHomeBinding
 import com.sonicqr.qrcodescanner.storage.PayloadReaderContract
 import com.sonicqr.qrcodescanner.storage.PayloadReaderDbHelper
 import com.sonicqr.qrcodescanner.util.PayloadDecoder
-import java.io.File
+import java.time.Duration
 import java.time.LocalDateTime
-import java.util.*
+import java.time.format.DateTimeFormatter
 
 
 class HomeFragment : Fragment() {
+
+    private val enableLogging: Boolean = false
 
     private lateinit var binding: FragmentHomeBinding
 
@@ -47,11 +43,15 @@ class HomeFragment : Fragment() {
 
     private var barcodeView: CompoundBarcodeView? = null
 
+    private lateinit var txtOuput: TextView
+
     private val toneGen1 = ToneGenerator(AudioManager.STREAM_ALARM, 75)
     private lateinit var lastBeepDateTime: LocalDateTime;
     private val MAX_BEEP_INTERVAL_MS = 70; //70
     private val MAX_BEEP_REPEAT_INTERVAL_MS = 70; //200
     private val BEEP_DURATION_MS = 20; // to delay QR
+
+    private lateinit var receivedFirstPacketAt: LocalDateTime
 
     private val callback: BarcodeCallback = object : BarcodeCallback {
         override fun barcodeResult(result: BarcodeResult) {
@@ -84,6 +84,9 @@ class HomeFragment : Fragment() {
         this.barcodeView = root.findViewById(R.id.barcode_scanner);
         (this.barcodeView as CompoundBarcodeView).decodeContinuous(callback);
 
+        // UI
+        this.txtOuput = root.findViewById<TextView>(R.id.txtOuput)
+
         this.lastBeepDateTime = LocalDateTime.now();
 
         return root
@@ -108,16 +111,24 @@ class HomeFragment : Fragment() {
         val result = rawResult.text
 
         // Check header
-        val headerRegex = """@(\d+)\|(\S+)""".toRegex();
+        val headerRegex = """@(\d+)\|(.+)""".toRegex();
         val matchResult = headerRegex.find(result)
-        if (matchResult != null && matchResult.groups.count() > 0) {
-            val (lineCount, headerFileName) = matchResult.destructured
-            binding.txtScanned.text = "Going for $lineCount lines for file $headerFileName"
+
+//        this.logToOutput("decoding " + result)
+        if (matchResult != null && matchResult.groups.isNotEmpty()) {
+            val (lineCount, fileData) = matchResult.destructured
+            this.logToOutput("Going for $lineCount lines for file $fileData")
+            //binding.txtScanned.text = "Going for $lineCount lines for file $headerFileName"
 
             // Clear records
-            this.fileName = headerFileName
+            val fileAttributes = fileData.split('|')
+            this.fileName = fileAttributes[0]
             this.valuesList = Array(lineCount.toInt()) {""} // Init empty array
             this.insertCount = 0
+            this.logToOutput("File name ${this.fileName}")
+
+            this.logToOutput(fileData)
+            fileAttributes.forEach { this.logToOutput("- $it") }
             return
         }
 
@@ -146,30 +157,44 @@ class HomeFragment : Fragment() {
 
                 val firstDetectionOfFrame = valuesList[currentLineNumber] == "";
                 if (firstDetectionOfFrame) {
-                    savePayloadToDatabase(currentLineNumber, curData)
+                    valuesList[currentLineNumber] = curData
+//                    savePayloadToDatabase(currentLineNumber, curData)
                     insertCount ++;
+                }
 
+                val isAllDataReceived = this.checkAllDataReceived()
+                if (isAllDataReceived) {
+                    toneGen1.startTone(ToneGenerator.TONE_CDMA_EMERGENCY_RINGBACK, 100)
+                    val file = PayloadDecoder.decodeDataPacketsIntoFile(
+                        requireContext(), this.fileName, valuesList)
+                    PayloadDecoder.openFile(requireContext(), file)
+                }
+
+                // Audio Acknowledgement
+                if (firstDetectionOfFrame) {
                     if (now.isAfter(
                             this.lastBeepDateTime.plusNanos(MAX_BEEP_INTERVAL_MS * 1000000L))) {
                         toneGen1.startTone(beepTone, BEEP_DURATION_MS)
                         this.lastBeepDateTime = LocalDateTime.now()
                     }
-
                 }
-                else if (now.isAfter(
+                else if (
+                    now.isAfter(
                         this.lastBeepDateTime.plusNanos(MAX_BEEP_REPEAT_INTERVAL_MS * 1000000L))
                 ) {
                     toneGen1.startTone(beepTone, BEEP_DURATION_MS)
                     this.lastBeepDateTime = LocalDateTime.now();
                 }
 
-                valuesList[currentLineNumber] = curData
-
-                if (this.checkAllDataReceived()) {
-                    toneGen1.startTone(ToneGenerator.TONE_CDMA_EMERGENCY_RINGBACK, 100)
-                    val file = PayloadDecoder.decodeDataPacketsIntoFile(
-                        requireContext(), this.fileName, valuesList)
-                    PayloadDecoder.openFile(requireContext(), file)
+                // Calculate total time taken
+                if (firstDetectionOfFrame) {
+                    if (currentLineNumber == 0) {
+                        this.receivedFirstPacketAt = now
+                    }
+                    else if (isAllDataReceived) {
+                        val timeTakenToTransferFile = Duration.between(this.receivedFirstPacketAt, now)
+                        this.logToOutput("Time taken : " + timeTakenToTransferFile.toMillis() / 1000.0, true)
+                    }
                 }
             }
         }
@@ -179,8 +204,10 @@ class HomeFragment : Fragment() {
          */
 
         //txtScanned.text = "Total records: " + mapValues.size().toString();
-        binding.txtScanned.text = "Total records: $insertCount";
+//        binding.txtScanned.text = "Total records: $insertCount";
+        this.logToOutput("Total records: $insertCount")
     }
+
 
     private fun checkAllDataReceived(): Boolean {
         for (i in valuesList.indices) {
@@ -214,4 +241,13 @@ class HomeFragment : Fragment() {
 
     }
 
+    private fun logToOutput(text:String, force:Boolean = false) {
+        if (!enableLogging && !force) return
+
+        val current = LocalDateTime.now()
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
+        val formatted = current.format(formatter)
+
+        this.txtOuput.text = formatted + " : " + text + "\n" + this.txtOuput.text
+    }
 }
