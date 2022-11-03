@@ -47,8 +47,10 @@ class HomeFragment : Fragment() {
 
     private val toneGen1 = ToneGenerator(AudioManager.STREAM_ALARM, 75)
     private lateinit var lastBeepDateTime: LocalDateTime;
+//    private val MAX_BEEP_INTERVAL_MS = 0; //70
+//    private val MAX_BEEP_REPEAT_INTERVAL_MS = 0; //200
     private val MAX_BEEP_INTERVAL_MS = 70; //70
-    private val MAX_BEEP_REPEAT_INTERVAL_MS = 70; //200
+    private val MAX_BEEP_REPEAT_INTERVAL_MS = 100; //200
     private val BEEP_DURATION_MS = 20; // to delay QR
 
     private lateinit var receivedFirstPacketAt: LocalDateTime
@@ -136,7 +138,7 @@ class HomeFragment : Fragment() {
             return
         };
 
-        val columns = result.split("|")
+        val columns = result.split(":")
 
         if (columns.count() >= 2) {
             // Check for line number
@@ -144,6 +146,7 @@ class HomeFragment : Fragment() {
             if (currentLineNumber != null) {
                 // process
                 val curData = result.subSequence(columns[0].count() + 1, result.length).toString();
+//                val curData = columns[1];
 
                 //mapValues.put(curLine.toInt(), curData);
 

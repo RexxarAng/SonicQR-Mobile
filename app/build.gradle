@@ -10,13 +10,13 @@ ext {
 
 android {
     namespace 'com.sonicqr.qrcodescanner'
-    compileSdkVersion 32
+    compileSdkVersion 33
 
     defaultConfig {
         applicationId "com.sonicqr.qrcodescanner"
 //        minSdkVersion 24
         minSdkVersion 26
-        targetSdkVersion 32
+        targetSdkVersion 33
         versionCode 1
         versionName "1.0"
 
@@ -63,6 +63,18 @@ dependencies {
     implementation "com.journeyapps:zxing-android-embedded:$zxingAndroidEmbeddedVersion"
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
     implementation 'androidx.multidex:multidex:2.0.1'
+
+    // ViewModel and LiveData
+    implementation "androidx.lifecycle:lifecycle-livedata:2.5.1"
+    implementation "androidx.lifecycle:lifecycle-viewmodel:2.5.1"
+
+    implementation 'com.google.mlkit:barcode-scanning:17.0.2'
+    implementation 'io.github.ehn-digital-green-development:base45:0.0.3'
+
+    // CameraX dependencies
+    implementation "androidx.camera:camera-camera2:1.2.0-rc01"
+    implementation "androidx.camera:camera-lifecycle:1.2.0-rc01"
+    implementation "androidx.camera:camera-view:1.2.0-rc01"
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
