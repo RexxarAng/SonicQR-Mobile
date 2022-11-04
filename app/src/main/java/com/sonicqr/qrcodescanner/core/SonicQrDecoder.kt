@@ -9,6 +9,7 @@ import androidx.core.content.FileProvider
 import nl.minvws.encoding.Base45
 import java.io.File
 import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
 import java.util.*
 
 class SonicQrDecoder : Decoder {
@@ -24,9 +25,17 @@ class SonicQrDecoder : Decoder {
         val myDir = File(path, "sonicqr")
         myDir.mkdir()
 
+        if (hash(decodedUrlBytes) != headerFrame.checkSum) return null;
+        Log.d("SonicQrDecoder", "Hash checksum verified")
         val file = File(myDir, headerFrame.fileName)
         file.writeBytes(decodedUrlBytes)
         return file
+    }
+
+    private fun hash(decodedUrlBytes: ByteArray): String {
+        val md = MessageDigest.getInstance("SHA-256")
+        val digest = md.digest(decodedUrlBytes)
+        return digest.fold("") { str, it -> str + "%02x".format(it) }
     }
 
     private fun decodeBase45Data(encodedData: String): ByteArray {
