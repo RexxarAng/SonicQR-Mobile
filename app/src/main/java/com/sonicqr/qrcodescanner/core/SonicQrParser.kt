@@ -5,7 +5,7 @@ import android.util.Log
 class SonicQrParser : Parser {
 
     override fun parseHeaderFrame(dataString: String): SonicQrHeaderFrame? {
-        val sonicQrHeaderPacketRegex = """@(\d+)\|(.+)""".toRegex()
+        val sonicQrHeaderPacketRegex = """!(\d+)\|(.+)""".toRegex()
         val matchResult = sonicQrHeaderPacketRegex.find(dataString)
 
         // Check data string is SonicQr header packet pattern else return null
@@ -22,8 +22,11 @@ class SonicQrParser : Parser {
         sonicQrHeader.fileName = fileAttributes[0]
         sonicQrHeader.fileType = fileAttributes[1]
         sonicQrHeader.sizeInBytes = fileAttributes[2].toInt()
+        sonicQrHeader.encoding = fileAttributes[3]
+        sonicQrHeader.checkSum = fileAttributes[4]
+        // Transfer
         sonicQrHeader.audioCoolDown =
-            if (fileAttributes.size >= 5) fileAttributes[4].toInt()
+            if (fileAttributes.size >= 6) fileAttributes[5].toInt()
             else 100
         return sonicQrHeader
     }

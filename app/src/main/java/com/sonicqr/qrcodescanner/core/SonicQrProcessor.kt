@@ -112,7 +112,16 @@ class SonicQrProcessor(private var context: Context) {
     }
 
     private fun checkAnyPreviousFrameIsEmpty(seqNumber: Int): Boolean {
-        return seqNumber > lastSequentialFrameSeqNumber + 1
+        // Invalid check - seqNumber cannot be greater
+        if (seqNumber >= this.dataFrames.size) return true
+
+        for (i in lastSequentialFrameSeqNumber+1 until seqNumber) {
+            if (this.dataFrames[i] == null) {
+                lastSequentialFrameSeqNumber = i-1
+                return true
+            }
+        }
+        return false
     }
 
     private fun checkAllDataFramesReceived(): Boolean {

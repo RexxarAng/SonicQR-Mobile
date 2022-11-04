@@ -5,6 +5,7 @@ abstract class HeaderFrame {
     var fileName: String = "default.txt"
     var fileType: String = "text/plain"
     var sizeInBytes: Int = 0
+    var encoding: String = "Base45"
     var checkSum: String = "XXX"
     var audioCoolDown: Int = 100
 }

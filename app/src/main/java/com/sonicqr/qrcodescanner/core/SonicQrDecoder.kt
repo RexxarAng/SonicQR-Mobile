@@ -16,8 +16,9 @@ class SonicQrDecoder : Decoder {
         var encodedData = ""
         dataFrames.forEach { dataFrame -> encodedData += dataFrame?.dataString }
 
-        // TODO: To add back base64 decoding
-        val decodedUrlBytes = decodeBase45Data(encodedData)
+        val decodedUrlBytes =
+            if ("Base45" == headerFrame.encoding) decodeBase45Data(encodedData)
+            else decodeBase64Data(encodedData)
 
         val path = context.getExternalFilesDir(null)
         val myDir = File(path, "sonicqr")
@@ -117,7 +118,8 @@ class SonicQrDecoder : Decoder {
                     intent,
                     "Open"
                 )
-            ) else Toast.makeText(context, "File is corrupted", Toast.LENGTH_LONG).show()
+            )
+            else Toast.makeText(context, "File is corrupted", Toast.LENGTH_LONG).show()
         } catch (ex: Exception) {
             Toast.makeText(
                 context,
