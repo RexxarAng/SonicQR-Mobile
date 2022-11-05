@@ -7,7 +7,7 @@ import java.time.LocalDateTime
 
 class SonicQrAudioController(configuration: SonicQrAudioConfiguration) {
 
-    private val toneGenerator = ToneGenerator(AudioManager.STREAM_ALARM, 75)
+    private val toneGenerator = ToneGenerator(AudioManager.STREAM_MUSIC, 100)
     private val configuration: SonicQrAudioConfiguration
     private var lastAudioPlayedAt: LocalDateTime = LocalDateTime.now()
 
