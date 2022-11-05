@@ -16,7 +16,7 @@ class SonicQrDecoder : Decoder {
     override fun decode(context: Context, headerFrame: HeaderFrame, dataFrames: Array<DataFrame?>): File? {
         var encodedData = ""
         dataFrames.forEach { dataFrame -> encodedData += dataFrame?.dataString }
-
+        Log.d("SonicQrDecoder", "Encoded data: $encodedData");
         val decodedUrlBytes =
             if ("Base45" == headerFrame.encoding) decodeBase45Data(encodedData)
             else decodeBase64Data(encodedData)
@@ -24,8 +24,10 @@ class SonicQrDecoder : Decoder {
         val path = context.getExternalFilesDir(null)
         val myDir = File(path, "sonicqr")
         myDir.mkdir()
+        Log.d("SonicQrDecoder", "Hash: " + hash(decodedUrlBytes))
+        Log.d("SonicQrDecoder", "Header checksum: " + headerFrame.checkSum)
 
-        if (hash(decodedUrlBytes) != headerFrame.checkSum) return null;
+//        if (hash(decodedUrlBytes) != headerFrame.checkSum) return null;
         Log.d("SonicQrDecoder", "Hash checksum verified")
         val file = File(myDir, headerFrame.fileName)
         file.writeBytes(decodedUrlBytes)
