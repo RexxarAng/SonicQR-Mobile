@@ -171,31 +171,6 @@ class MainActivity : AppCompatActivity() {
                 barcodes.forEach {
                     it.rawValue?.let { it1 -> Log.d(TAG, it1)}
                     it.rawValue?.let { it1 -> sonicQrProcessor?.handle(it1) }
-//                    if (it.rawValue != null) {
-//                        val contents = it.rawValue?.split(":")?.size
-//
-//                        if (contents!! >= 2) {
-//                            Log.d(TAG, "in")
-//                            val seqNumber = it.rawValue!!.split(":")[0].toIntOrNull()
-//
-//                            var beepTone = ToneGenerator.TONE_CDMA_ONE_MIN_BEEP;
-//                            if (lastPacketNumber + 1 >= seqNumber!!) {
-//                                Log.d(TAG, "Ok")
-//                                lastPacketNumber = seqNumber
-//                            } else {
-//                                Log.d(TAG, "Missed")
-//                                beepTone = ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD;
-//                            }
-//                            toneGen1.startTone(beepTone, 20)
-//                        }
-//                        else {
-//                            Log.d(TAG, "out")
-//                        }
-//                    }
-//                    else {
-//                        Log.d(TAG, "out")
-//                    }
-
                 }
             }
             .addOnFailureListener {
