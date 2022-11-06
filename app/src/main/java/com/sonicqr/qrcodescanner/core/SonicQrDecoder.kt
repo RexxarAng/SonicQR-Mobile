@@ -3,6 +3,7 @@ package com.sonicqr.qrcodescanner.core
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.core.content.FileProvider
@@ -22,14 +23,12 @@ class SonicQrDecoder : Decoder {
             else decodeBase64Data(encodedData)
 
         val path = context.getExternalFilesDir(null)
-        val myDir = File(path, "sonicqr")
-        myDir.mkdir()
         Log.d("SonicQrDecoder", "Hash: " + hash(decodedUrlBytes))
         Log.d("SonicQrDecoder", "Header checksum: " + headerFrame.checkSum)
 
-//        if (hash(decodedUrlBytes) != headerFrame.checkSum) return null;
+        if (hash(decodedUrlBytes) != headerFrame.checkSum) return null;
         Log.d("SonicQrDecoder", "Hash checksum verified")
-        val file = File(myDir, headerFrame.fileName)
+        val file = File(path, headerFrame.fileName)
         file.writeBytes(decodedUrlBytes)
         return file
     }
@@ -53,6 +52,7 @@ class SonicQrDecoder : Decoder {
 
     override fun openFile(context: Context, file: File) {
         Log.d("SonicQrDecoder", "Trying to open File")
+        Log.d("SonicQrDecoder", file.absolutePath)
 
         val url: Uri =
             FileProvider.getUriForFile(

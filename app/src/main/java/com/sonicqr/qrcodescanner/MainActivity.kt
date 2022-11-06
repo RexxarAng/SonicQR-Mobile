@@ -2,13 +2,16 @@ package com.sonicqr.qrcodescanner
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
+import android.content.Intent
+import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.AttributeSet
+import android.provider.DocumentsContract
 import android.util.DisplayMetrics
 import android.util.Log
-import android.view.View
+import androidx.activity.result.ActivityResultCallback
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -16,15 +19,22 @@ import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.common.InputImage
+import com.sonicqr.qrcodescanner.core.SonicQrDecoder
 import com.sonicqr.qrcodescanner.core.SonicQrProcessor
 import com.sonicqr.qrcodescanner.ui.notifications.NotificationsViewModel
+import java.io.File
 import java.util.concurrent.Executors
 import kotlin.math.abs
 
+
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var fabOpenFolder: FloatingActionButton;
+
     private var previewView: PreviewView? = null
     private var cameraProvider: ProcessCameraProvider? = null
     private var cameraSelector: CameraSelector? = null
@@ -40,10 +50,43 @@ class MainActivity : AppCompatActivity() {
 
     private var sonicQrProcessor : SonicQrProcessor = SonicQrProcessor(this)
 
+    private var openFileResultLauncher: ActivityResultLauncher<Intent> = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+        ActivityResultCallback { result ->
+            if (result.resultCode == RESULT_OK) {
+                val uri = result.data?.data
+                Log.d("MainActivity", "Uri: $uri")
+                val takeFlags: Int = result.data?.flags
+                    ?.and(FLAG_GRANT_READ_URI_PERMISSION)
+                    ?: 0
+                contentResolver.takePersistableUriPermission(uri!!, takeFlags)
+                val file = uri.path?.let { File(it) }
+                this.openFile(
+                    File(file!!.absoluteFile.toString()
+                        .replace(
+                            "/document/primary:",
+                            "/storage/emulated/0/")))
+            }
+        })
+
+    private fun openFile(file: File) {
+        SonicQrDecoder().openFile(this, file)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main2)
 
+        this.fabOpenFolder = findViewById(R.id.fabOpenFolder);
+        this.fabOpenFolder.setOnClickListener{
+            val path = this.getExternalFilesDir(null)
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "*/*"
+                putExtra(DocumentsContract.EXTRA_INITIAL_URI, path!!.toURI())
+            }
+            openFileResultLauncher.launch(intent)
+        }
 //        setContentView(R.layout.activity_main)
 //        val navView: BottomNavigationView = findViewById(R.id.nav_view)
 //        val navController = findNavController(R.id.nav_host_fragment)
