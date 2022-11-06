@@ -8,6 +8,9 @@
 ## Project Description
 A static react web application called SonicQR-Web and an android application called SonicQR-Mobile provides the conversion of files through a series of QR codes that will flash on the sender’s web browser and for recording the QR codes to receive the file on the receiver’s mobile device respectively. To ensure that the QR codes are received by the receiver while preventing multiple loops from occurring, the sender will wait for acknowledgement from the receiver via the transmission of sound when the receiver successfully receives the frame before changing to the next frame.
 
+[![SonicQR Video](http://img.youtube.com/vi/FloDsSYSAqo/0.jpg)](http://www.youtube.com/watch?v=FloDsSYSAqo)
+
+
 ## Setup
 To view the webpage, it is already hosted on github
 - https://rexxarang.github.io/SonicQR-Web 
